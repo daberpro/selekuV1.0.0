@@ -13,3 +13,25 @@
 - (DefineItem) -> membuat preprocessing di seleku
 
 - (getFileText) -> text yang kan di compile dari file .seleku
+
+--- tree 
+-- bin -> tempat file hasil compile .ts dari root folder
+-- bin/lib -> tempat library yang di butuhkan
+-- src -> tempat peletakan source file seleku
+
+=============================================
+=========== fitur fitur seleku ==============
+=============================================
+1. seleku importer
+2. seleku preprocess deklaratif
+3. binding-context reactivity
+4. seleku lifecycle event
+5. dynamic attribute (not yet)
+6. seleku looping context (not yet)
+7. seleku condition context (not yet)
+8. seleku async mode (not yet)
+9. seleku self-out component (not yet) -> membuat bind self untuk component 
+10. seleku this (not yet)(optional)
+11. seleku plugin (not yet)
+
+>>>>>>>>>>> version 1.0.0 <<<<<<<<<<<<<

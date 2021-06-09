@@ -32,7 +32,8 @@
 <script type="text/javascript">
 	// @js
 
-	let nama = "andi";
+	export let nama = "andi";
+	export let x = "andi";
 
 </script>
 
