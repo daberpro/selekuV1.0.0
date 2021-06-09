@@ -1,0 +1,15 @@
+--- simbol simbol di compiler seleku
+
+- (0:1) -> 0 adalah tahap pembuatan
+		-> : adalah pemisah dari index (saparator)
+		-> 1 adalah alur flow
+
+- (optional) -> optional adalah, kode tambahan untuk pelengkap
+
+- (writeFile) -> menuliskan hasil compile ke file
+
+- (writeImport) -> menuliskan hasil import
+
+- (DefineItem) -> membuat preprocessing di seleku
+
+- (getFileText) -> text yang kan di compile dari file .seleku

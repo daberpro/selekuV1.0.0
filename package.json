@@ -1,0 +1,22 @@
+{
+  "name": "compiler",
+  "version": "1.0.0",
+  "description": "",
+  "main": "compiler.js",
+  "scripts": {
+    "dev": ""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "chalk": "^3.0.0",
+    "htmlparser2": "^6.1.0",
+    "js-beautify": "^1.13.13",
+    "node-html-parser": "^3.3.4",
+    "nodemon": "^2.0.7"
+  },
+  "devDependencies": {
+    "@types/node": "^15.6.1"
+  }
+}

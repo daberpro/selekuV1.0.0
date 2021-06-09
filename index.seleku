@@ -1,0 +1,45 @@
+@import {
+	card as "card.seleku",
+	navbar as "navbar.seleku"
+}
+
+#define panjang 100px shhs
+#define panjang 
+
+<config global="true">
+	<title>
+		Hello world
+	</title>
+	<style type="text/css" seleku:ignore="true">
+		.box{
+			font-family: santuy;
+			width: panjang;
+		}
+	</style>
+<config>
+
+<h1 class="box" id="box1">
+	hello {nama}
+	<span>
+		tinggiku panjang
+	</span>
+	<p>
+		haha
+		<b>{x}</b>
+	</p>
+</h1>
+
+<script type="text/javascript">
+	// @js
+
+	let nama = "andi";
+
+</script>
+
+<style type="text/css">
+	/* @css */
+
+	h1{
+		color: red;
+	}
+</style>
