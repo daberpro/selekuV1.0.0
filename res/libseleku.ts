@@ -42,7 +42,7 @@ class include {
 		try{
 
 			let query = file.readFileSync(Path);
-			console.log(query.toString());
+			return query.toString();
 
 		}catch(err){
 			const chalk = require("chalk");

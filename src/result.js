@@ -1,3 +1,75 @@
+let $_context__ = [];
+$_component__ = []; // importer seleku (4:0)
+
+// fungsi yang akan mengembalikan hasil dari import (4:1)
+let card = ({
+  target
+}) => {
+
+
+
+  let seleku_components_ = [{
+    element: "h1",
+    inner: "hello {nama}",
+    attribute: [],
+    child: [],
+  }, {
+    element: "b",
+    inner: "{count}",
+    attribute: [],
+    child: [],
+  }, ]
+
+  let index = [];
+  let prop = [];
+  let component_life = []
+  let position = 0;
+
+  for (let $components_ of seleku_components_) {
+    index.push(Seleku($components_));
+  }
+
+
+  for (let $components_final of index) {
+
+    $components_final.create =
+
+      {
+        target,
+        onCreate(node) {
+
+          console.log(" i am card component has been create");
+
+        },
+        onUpdate() {
+
+          console.log(" i am updated ");
+
+        }
+      }
+
+    ;
+
+    $components_final.$element = $components_final.component.parents;
+
+    $components_final.position = position;
+
+    component_life.push($components_final);
+
+    prop.push($components_final.bindingContext = {
+      count,
+    })
+
+    position++;
+
+  }
+
+  $_component__ = [...$_component__, ...component_life];
+  $_context__ = [...$_context__, ...prop];
+
+  return prop;
+
+};
 let seleku_components_index = [{
   element: "config",
   inner: "",
@@ -11,22 +83,10 @@ let seleku_components_index = [{
     inner: "Hello world",
     attribute: [],
     child: [],
-  }, {
-    element: "style",
-    inner: ".box{font-family: santuy;width: ;}",
-    attribute: [{
-      type: {
-        value: "text/css",
-      },
-      ignore: {
-        value: "true",
-      },
-    }, ],
-    child: [],
   }, ],
 }, {
   element: "h1",
-  inner: "hello {nama}",
+  inner: "hello {nama} ",
   attribute: [{
     class: {
       value: "box",
@@ -51,7 +111,201 @@ let seleku_components_index = [{
       child: [],
     }, ],
   }, ],
+}, {
+  element: "h1",
+  inner: "hasil : {a+b}",
+  attribute: [],
+  child: [],
 }, ]
+let seleku_components_style_index = [{
+  "type": "rule",
+  "selectors": ["b"],
+  "declarations": [{
+    "type": "declaration",
+    "property": "color",
+    "value": "gray",
+    "position": {
+      "start": {
+        "line": 4,
+        "column": 3
+      },
+      "end": {
+        "line": 4,
+        "column": 14
+      }
+    }
+  }, {
+    "type": "declaration",
+    "property": "width",
+    "value": "((args)=> {return 100/3+\"%\"})",
+    "position": {
+      "start": {
+        "line": 5,
+        "column": 3
+      },
+      "end": {
+        "line": 9,
+        "column": 7
+      }
+    }
+  }],
+  "position": {
+    "start": {
+      "line": 3,
+      "column": 2
+    },
+    "end": {
+      "line": 10,
+      "column": 3
+    }
+  }
+}, {
+  "type": "rule",
+  "selectors": [".box"],
+  "declarations": [{
+    "type": "declaration",
+    "property": "width",
+    "value": "100%",
+    "position": {
+      "start": {
+        "line": 13,
+        "column": 3
+      },
+      "end": {
+        "line": 13,
+        "column": 15
+      }
+    }
+  }],
+  "position": {
+    "start": {
+      "line": 12,
+      "column": 2
+    },
+    "end": {
+      "line": 14,
+      "column": 3
+    }
+  }
+}, {
+  "type": "rule",
+  "selectors": ["h1"],
+  "declarations": [{
+    "type": "declaration",
+    "property": "width",
+    "value": "100%",
+    "position": {
+      "start": {
+        "line": 17,
+        "column": 3
+      },
+      "end": {
+        "line": 17,
+        "column": 14
+      }
+    }
+  }],
+  "position": {
+    "start": {
+      "line": 16,
+      "column": 2
+    },
+    "end": {
+      "line": 18,
+      "column": 3
+    }
+  }
+}]
+// set style sheet
+
+let all_style = [];
+
+function __StyleSheet(args) {
+
+  let {
+    type,
+    selectors,
+    declarations
+  } = args;
+
+  if (type === "rule" && selectors[0].length > 0) {
+
+    for (let x in declarations) {
+
+      let $x = declarations[x];
+
+      try {
+
+        let $fn = (eval($x.value) instanceof Function) ? eval($x.value) : () => {};
+
+        // console.log($fn)
+
+        if (!($fn instanceof Function)) $x.value = $fn;
+
+        $x.value = $fn({
+          get(args) {
+            return {
+              element: document.querySelector(args),
+              rect: document.querySelector(args).getClientRects()
+            }
+          }
+        });
+
+        declarations[x] = $x;
+
+      } catch (err) {
+        // console.log(err)
+      }
+
+    }
+
+    all_style.push(args);
+
+  }
+
+
+}
+
+function __renderCSS(args) {
+
+  let {
+    selectors,
+    declarations
+  } = args;
+
+  let properties = "";
+
+  if (selectors[0].length > 0) {
+
+    for (let $x of declarations) {
+
+      properties += `${$x.property} : ${$x.value.replace(/(\r|\t|\n)/igm,"")};`;
+
+    }
+
+  }
+
+  return `${selectors[0]} {${properties}}`;
+
+}
+
+function __Update() {
+
+  let result = "";
+
+  for (let $style of all_style) {
+
+    result += __renderCSS($style);
+
+  }
+
+  return result;
+
+}
+
+for (let $style_ of seleku_components_style_index) {
+  __StyleSheet($style_)
+}
 
 // Reciprocal.js (include library by daber)
 let sort_int = (args = []) => {
@@ -175,9 +429,8 @@ class draw {
       }
 
       if ($property === "element") {
-
         // membuat element dari object components (1:8)
-        this.parent = document.createElement(this.components[$property]);
+        this.parent = document.createElement(this.components[$property])
 
       }
 
@@ -185,7 +438,7 @@ class draw {
 
         // membuat inner dari object dan memasukan nya ke dalam element
         // (1:9)
-        if (this.parent instanceof HTMLElement) this.parent.append(this.components[$property]);
+        if (this.parent instanceof HTMLElement) this.parent.append(this.components[$property].replace(/\"/igm, ""));
 
       }
 
@@ -247,7 +500,9 @@ class draw {
     }
 
     // merender element yang telah di buat ke dalam element target
-    this.target.appendChild(this.parent);
+    if (this.parent.nodeName !== "CONFIG") {
+      this.target.appendChild(this.parent)
+    }
 
     this.parents = this.parent;
 
@@ -287,17 +542,11 @@ class draw {
 }
 
 
-// ini fungsi untuk me replace string berdasarkan index (optional)
-function replaceUsingIndex(data, from_, to, replaceMent) {
-  if (from_ >= data.length) return data;
-
-  return data.substring(0, from_) + replaceMent + data.substring(to)
-}
 
 // fungsi reactivity adalah suatu fungsi yang di gunakan untuk
 // membuat agar suatu oject menjadi reactive (0:0)
 
-function Reactivity(obj_, components /*di dalam sini adalah components yang akan di binding*/ ) {
+function Reactivity(obj_, components /*di dalam sini adalah components yang akan di binding*/ , callback /*ini adalah call back function*/ ) {
 
   // lakukan validasi dan pengecekan bahwa parameter obj_
   // itu adalah object (0:1)
@@ -323,7 +572,9 @@ function Reactivity(obj_, components /*di dalam sini adalah components yang akan
       },
       set(args /*parameter ini akan berisi nilai yang di input*/ ) {
 
-        console.log("haha")
+        // call back function akan di panggil setiap kali
+        // element di update
+        if (callback instanceof Function) callback();
 
         // melakukan validasi/testing terhadap variabel yang
         // terdefenisi
@@ -351,7 +602,26 @@ function Reactivity(obj_, components /*di dalam sini adalah components yang akan
                 mirror = $components_.inner;
               }
 
-              if (data === key.trim()) {
+              if (/(\+|\-|\/|\*)/igm.test(data.trim())) {
+
+                let operator = [...data.match(/(\+|\-|\/|\*)/igm)];
+                let string = [...data.match(/\w*/igm)];
+                string = string.filter((el) => el.length > 0);
+
+                for (let $x in string) {
+
+                  if (string[$x] === key.trim()) {
+
+                    if (typeof args === "number") eval(`${string[$x]} = ${args}`);
+                    if (typeof args === "string") eval(`${string[$x]} = "${args}"`);
+
+                  }
+
+                }
+
+              }
+
+              if (!(/(\+|\-|\/|\*)/igm.test(data.trim())) && data === key.trim()) {
 
                 if (typeof args === "number") eval(`${data} = ${args}`);
                 if (typeof args === "string") eval(`${data} = "${args}"`);
@@ -395,16 +665,76 @@ function Reactivity(obj_, components /*di dalam sini adalah components yang akan
 
 }
 
-// membuat ecosystem untuk sistem (3:0)
+// custom Reactivity adalah suatu fungsi yang akan
+// mengubah suatu object menjadi recative (CUSTOMREACTIVITY)
+
+function CustomReactivity(obj, {
+  before,
+  after
+}) {
+
+  for (let $property in obj) {
+
+    if (obj.hasOwnProperty($property)) {
+
+      let data = obj[$property];
+
+      Object.defineProperty(obj, $property, {
+        get() {
+
+          return data;
+
+        },
+        set(args) {
+
+          if (before instanceof Function) before({
+            key: $property,
+            args
+          });
+
+          try {
+
+            if (typeof args === "string") eval(`${$property} = "${args}"`);
+
+            if (typeof args === "number") eval(`${$property} = ${args}`);
+
+            if (args instanceof Object) eval(`${$property} = ${JSON.stringify(args)}`);
+
+
+          } catch (err) {
+
+            console.log(err.message);
+
+          }
+
+          if (after instanceof Function) after({
+            key: $property,
+            args
+          });
+
+        }
+      })
+
+    }
+
+  }
+
+  return obj;
+
+} // membuat ecosystem untuk sistem (3:0)
 class Ecosystem {
+
+  binding = [];
+  onDestroyEvent = null;
+  onUpdateEvent = null;
+  $element = null;
+  component = null;
+  position = 0;
 
   // membuat constructor untuk mengambil object (3:1)
   constructor(object) {
 
     this.object = object;
-    this.binding = [];
-    this.onDestroyEvent = null;
-    this.$element = null;
 
   }
 
@@ -419,11 +749,25 @@ class Ecosystem {
     let component = new draw(this.object, target);
     component.render();
 
+    if (document.head.querySelector("style") instanceof HTMLStyleElement) {
+
+      document.head.querySelector("style").textContent = __Update();
+
+    } else {
+
+      let style = document.createElement("style");
+      style.textContent = __Update();
+      document.head.appendChild(style);
+
+    }
+
     onCreate(component);
 
     this.onDestroyEvent = onDestroy;
+    this.onUpdateEvent = onUpdate;
     this.binding = component.binding;
-    this.$element = this.binding[0].element;
+    this.$element = this.binding[0]?.element;
+    this.component = component;
 
   }
 
@@ -437,7 +781,7 @@ class Ecosystem {
       setContext.push($x);
     }
 
-    let context = Reactivity(variabel, this.binding);
+    let context = Reactivity(variabel, this.binding, this.onUpdateEvent);
 
     context[setContext[0]] = context[setContext[0]];
 
@@ -453,8 +797,24 @@ class Ecosystem {
   // fungsi yang akan men destroy object dan menjalankan event (3:4)
   destroy() {
 
+    this.onDestroyEvent({
+      element: this.$element
+    });
+
+    // mendelete ecosystem ketika component di destroy,
+    // dari global component registry
+    if (typeof this.position === "number") {
+      $_component__.splice(this.position, 1);
+      $_context__.splice(this.position, 1);
+
+      for (let $x in $_component__) {
+
+        if ($_component__[$x].position !== 0) $_component__[$x].position--;
+
+      }
+    }
+
     this.$element.remove();
-    this.onDestroyEvent();
 
   }
 
@@ -462,4 +822,75 @@ class Ecosystem {
 
 let Seleku = ($c) => new Ecosystem($c);
 
-let index = Seleku(seleku_components_index);
+let index = [];
+
+for (let $components_ of seleku_components_index) {
+  index.push(Seleku($components_));
+}
+let add = (...args) => args[0] + args[1];
+
+let __$_position__ = 0;
+let __$_fromParentsComponents__ = [];
+
+
+
+let nama = "andi";
+let x = 100;
+let a = 10;
+let b = 3;
+
+
+
+let count = 0;
+
+
+
+for (let $components_final of index) {
+
+  $components_final.create =
+
+    {
+      target: document.body /*default from seleku*/ ,
+      onCreate(node) {
+
+        // console.log(node);
+
+      }
+    }
+
+
+  $components_final.$element = $components_final.component.parents;
+  $components_final.position = __$_position__;
+  if ($components_final.$element.nodeName !== "CONFIG") __$_fromParentsComponents__.push($components_final);
+  if ($components_final.$element.nodeName !== "CONFIG") $_context__.push($components_final.bindingContext = {
+    nama,
+    x,
+    a,
+    b,
+  });
+
+  if ($components_final.$element.nodeName !== "CONFIG") __$_position__++;
+}
+
+$_component__ = [...$_component__, ...__$_fromParentsComponents__];
+
+// ini adalah lib untuk mengset binding menjadi global context
+window.ctx = {
+  nama,
+  x,
+  a,
+  b,
+};
+
+window.ctx = CustomReactivity(ctx, {
+  after({
+    args,
+    key
+  }) {
+
+    for (let $data of $_context__) {
+      $data[key] = args;
+    }
+
+  }
+});

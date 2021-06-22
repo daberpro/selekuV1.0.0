@@ -14,6 +14,18 @@
 
 - (getFileText) -> text yang kan di compile dari file .seleku
 
+- (NOTE) -> kode yang harus di handle secepatnya
+
+- (JSinclude) -> javascript yang di ambil dari file .seleku
+
+>>>>>>>>>>>> seleku replacement keyword <<<<<<<<<<<<<<<
+- @components -> hasil compile
+- @fileName -> nama file
+- @componentName -> nama variabel komponen
+- @system -> config dari file .seleku untuk ecosystem
+- @binding -> binding variabel dari file .seleku
+- @aliasImportName -> nama alias dari importer
+
 --- tree 
 -- bin -> tempat file hasil compile .ts dari root folder
 -- bin/lib -> tempat library yang di butuhkan
@@ -33,5 +45,28 @@
 9. seleku self-out component (not yet) -> membuat bind self untuk component 
 10. seleku this (not yet)(optional)
 11. seleku plugin (not yet)
+12. seleku event handling (not yet)
+13. unused css (not yet)
 
 >>>>>>>>>>> version 1.0.0 <<<<<<<<<<<<<
+
+
+- sistem render dengan komponents
+-> JS (1) 
+-> komponen (2)
+-> Render (3)
+
+#configurasi di seleku compiler
+- alias -> lokasi path root dari project
+- name -> nama dari komponen
+- type -> tipe dari return hasil compile
+- componentName -> nama default untuk nama komponent jika type 
+				   nya adalah component
+- lib -> semua library yang akan di link oleh comppiler, 
+		 jika isinya "all" (artinya menginclude semua standard library)
+- globalprop -> mengset apakah variabel bisa di akses secara lokal atau global
+
+
+## NOTE ##
+- di file StyleComponent hasil compile css nya baru bisa untuk web
+- beri penjelasan di dalam compiler.ts

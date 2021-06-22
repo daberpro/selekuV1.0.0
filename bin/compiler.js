@@ -17,7 +17,10 @@ class Compiler {
             });
             return uuid;
         };
-        let { alias, name, type, lib } = this.config;
+        let { alias, name, type, lib, content, componentName, globalprop } = this.config;
+        let componentConfig = "";
+        let bindingVariabel = "";
+        let componentscript = "";
         let allPath = "";
         if (alias) {
             allPath = alias + this.path;
@@ -25,7 +28,7 @@ class Compiler {
         else {
             allPath = this.path;
         }
-        if (!(name.length > 0) || name === void 0) {
+        if (!(name?.length > 0) || name === void 0) {
             name = path.basename(this.path).replace(/\.\w*/igm, "");
         }
         // Reciprocal.js (include library by daber)
@@ -138,6 +141,9 @@ class Compiler {
             }
             return string.join('');
         }
+        // =============================================================
+        // ==================== compiler component =====================
+        // =============================================================
         // kita membuat parser untuk html
         // untuk parser yang di gunakan adalah htmlparser2
         // parser ini di ambil dari https://www.npmjs.com/package/htmlparser2
@@ -146,13 +152,15 @@ class Compiler {
         const htmlparser2 = require('htmlparser2');
         const beautify = require('js-beautify').js;
         const error = require('./Error');
+        const Include = require('./libseleku');
+        let StyleHandle = require("./StyleComponent.js");
         // variabel yang menyimpan hasil compile (2:11)
         let result_compile = [];
         // membuat array yang berisi kumpulan components (2:1)
         const components = [];
         // memparse tag yang ada di file .seleku (2:2)
         // (getFileText)
-        const all_components = [...HTMLParser.parse(fs.readFileSync(allPath).toString()).childNodes];
+        const all_components = [...HTMLParser.parse((content) ? content : fs.readFileSync(allPath).toString()).childNodes];
         // membuat fungsi yang menghandle hasil parse (2:3)
         function getObjectFromParser(parser_tokens) {
             if (all_components.length === 0)
@@ -223,10 +231,13 @@ class Compiler {
         // variabel ini akan menyimpan nilai index dari error handling preprocess
         // (2:27)
         let same = '';
+        // mengset agar config di set satu kali (2:31)
+        let setConfig = 0, setJS = 0, CSS_FROM_COMPONENTS = [];
         // fungsi ini berfungsi untuk membuat inner yang benar
         // dan memindahkan ke variabel result (2:12)
         function getValue(object_, $stringToError) {
             let Name = '';
+            let css = "";
             const fix = {};
             const parser = new htmlparser2.Parser({
                 onopentag(name, attributes) {
@@ -236,8 +247,15 @@ class Compiler {
                         // console.log(name)
                     }
                     else {
-                        if ((name === 'style' || name === 'script') && attributes['seleku:ignore']?.replace(/\{/igm, '').replace(/\}/igm, '') === 'true') {
-                            config.push({ name, 'seleku:ignore': attributes['seleku:ignore']?.replace(/\{/igm, '').replace(/\}/igm, '') });
+                        if (name === 'script' && attributes['seleku:ecosystem']?.replace(/\{/igm, '').replace(/\}/igm, '') === 'true') {
+                            config.push({ name, 'seleku:ecosystem': attributes['seleku:ecosystem']?.replace(/\{/igm, '').replace(/\}/igm, '') });
+                        }
+                        // javascript include (JSinclude)
+                        if (name === "script" && !(attributes['seleku:ecosystem']) && !(attributes['seleku:ignore'])) {
+                            config.push({ name, 'JS': "true" });
+                        }
+                        if (name === "style" && !(attributes['seleku:ecosystem'] || attributes['seleku:ignore'])) {
+                            css = "style";
                         }
                     }
                 },
@@ -245,6 +263,10 @@ class Compiler {
                     // di sini untuk inner dari tag
                     // console.log({text,Name});
                     // console.log(fix)
+                    if (css === "style") {
+                        CSS_FROM_COMPONENTS.push(text);
+                        css = "";
+                    }
                     // membuat preprocessing (2:22)
                     if (/\#define.*/igm.test(text)) {
                         let typed = text.split('\n');
@@ -284,11 +306,27 @@ class Compiler {
                         // Alias.push({alias: typed[1],value: typed[2].replace(/(\r|\t|\n)/igm,"")})
                     }
                     for (const $config_ of config) {
-                        if ($config_.name === 'style' && $config_['seleku:ignore'] === 'true') {
-                            // di sini untuk menabmahkan sass atau yang lain untuk html induk
+                        if (setConfig !== 1 && $config_.name === 'script' && $config_['seleku:ecosystem'] === 'true') {
+                            let Text = { text };
+                            componentConfig += Text.text.replace(/return/igm, "");
+                            $config_['seleku:ecosystem'] = "false";
+                            setConfig = 1;
                         }
-                        if ($config_.name === 'script' && $config_['seleku:ignore'] === 'true') {
-                            // di sini  untuk menambahkan typescript untuk di html induk
+                        if (setJS !== 1 && $config_.name === "script" && $config_["JS"] === "true") {
+                            componentscript = text.replace(/\export/igm, "");
+                            let props = text.match(/export.*/igm);
+                            let prop = props?.map((text, index) => {
+                                if (text.indexOf("export") !== -1 && (text.indexOf("let") !== -1 || text.indexOf("var") !== -1) && text.split(" ").length >= 3) {
+                                    return text.split(" ");
+                                }
+                            });
+                            let objectBinding = "";
+                            for (let $x of prop) {
+                                objectBinding += $x[2] + ",";
+                            }
+                            bindingVariabel = `{${objectBinding}}`;
+                            $config_["JS"] = "false";
+                            setJS = 1;
                         }
                     }
                     if (object_.inner.match(text.replace(/(\n|\t|\r)/igm, '')) && text.length > 0 && object_.element === Name && !(/\@css*/igm.test(text)) && !(/\@js*/igm.test(text)) && text.replace(/(\n|\t|\r)/igm, '').length > 0) {
@@ -296,7 +334,7 @@ class Compiler {
                         if (object_.child.length > 0) {
                             for (const $x of object_.child) {
                                 // (getFileText)
-                                getValue($x, fs.readFileSync(allPath).toString());
+                                getValue($x, (content) ? content : fs.readFileSync(allPath).toString());
                             }
                         }
                         // console.log(object_);
@@ -306,7 +344,7 @@ class Compiler {
                 },
             });
             // (getFileText)
-            parser.write(fs.readFileSync(allPath).toString());
+            parser.write((content) ? content : fs.readFileSync(allPath).toString());
             parser.end();
             // console.log(config)
         }
@@ -314,8 +352,10 @@ class Compiler {
         // mengset setiap nilai (2:13)
         for (const $components_ of result_compile) {
             // (getFileText)
-            getValue($components_, fs.readFileSync(allPath).toString());
+            getValue($components_, (content) ? content : fs.readFileSync(allPath).toString());
         }
+        // melakukan filter ke css dari komponents (2:32)
+        CSS_FROM_COMPONENTS = clear_paste(CSS_FROM_COMPONENTS, "string");
         // melakukan filter terhadap array hasil aliases (2:24)
         // define property (DefineItem)
         clear_paste(Alias, typeof Alias);
@@ -365,7 +405,7 @@ class Compiler {
                 }
             });
             // variabel ini akan berisi token yang sudah di olah (2:18)
-            let result = all_token.slice(location[0].index, location[location.length - 1].index + 1).join(' ').replace(/\<.*/igm, '').replace(/\#.*/igm, '');
+            let result = all_token.slice(location[0]?.index, location[location?.length - 1]?.index + 1)?.join(' ').replace(/\<.*/igm, '').replace(/\#.*/igm, '');
             // membuat token menjadi array (2:19)
             result = result.replace(/\}/igm, '').replace(/(\n|\t|\r)/igm, '').replace(/\,/igm, '{').split('{');
             // variabel ini akan menyimpan hasil akhir (2:20)
@@ -404,15 +444,44 @@ class Compiler {
         }
         // ini hasil import file (importFile)
         // (getFileText)
-        const data = getImport(fs.readFileSync(allPath).toString().replace(/\@import*\{/igm, '@import {'));
+        const data = getImport((content) ? content : fs.readFileSync(allPath).toString().replace(/\@import*\{/igm, '@import {'));
+        // (2:33)
+        let ChildComponent = "";
+        // proses pengambilan import component
+        for (let $child of data.slice(1, data.length)) {
+            if (data[0]?.trim() === "@import") {
+                try {
+                    const GetImport = new Include({
+                        name: $child.alias,
+                        path: alias + $child.path.replace(/\"/igm, ""),
+                    });
+                    let child = new Compiler({ path: "", config: {
+                            type: "component",
+                            content: GetImport.getSyntax,
+                            componentName: $child.alias,
+                            lib: [
+                                "all",
+                            ],
+                            // ini ari di ubah (NOTE)
+                            globalprop: true
+                        } }).compile();
+                    ChildComponent += child.js;
+                    if (child.globalProps)
+                        componentscript += child.globalProps;
+                }
+                catch (err) {
+                    console.log(err.message);
+                }
+            }
+        }
         // membuat lib include (2:29)
         function includeLib() {
             let library = "";
             if (lib instanceof Array) {
                 for (let $syntax of lib) {
                     if ($syntax === "all") {
-                        for (let $data of ["render.js", "react.js", "ecosystem.js"]) {
-                            library += fs.readFileSync(__dirname + "/lib/" + $data).toString();
+                        for (let $data of ["css.js", "render.js", "react.js", "ecosystem.js"]) {
+                            library += fs.readFileSync(__dirname + "/lib/" + $data).toString().replace(/\@binding/igm, (bindingVariabel?.length > 0) ? bindingVariabel : "{}");
                         }
                     }
                     else {
@@ -423,19 +492,59 @@ class Compiler {
             library = library.replace(/\@fileName/igm, name).replace(/\@componentName/igm, `seleku_components_${name}`);
             return library;
         }
+        // membuat importer untuk komponent yang di import (2:30)
+        if (type === "component")
+            return {
+                js: beautify(fs.readFileSync(__dirname + "/lib/components_importer.js").toString().
+                    replace(/\@prop/igm, (!(globalprop)) ? componentscript : "").
+                    replace(/\@aliasImportName/igm, componentName).
+                    replace(/\@components/igm, `let seleku_components_${name} = ${convertToText(result_compile)}`).
+                    replace(/\@componentName/igm, `seleku_components_${name}`).
+                    replace(/\@system/igm, (componentConfig?.length > 0) ? componentConfig : "{target}").
+                    replace(/\@binding/igm, (bindingVariabel?.length > 0) ? bindingVariabel : "{}"), { indent_size: 2, space_in_empty_paren: true }),
+                globalProps: (globalprop) ? componentscript : ""
+            };
+        // (2:23)
+        let css = StyleHandle(CSS_FROM_COMPONENTS.join("\n"));
         return {
-            js: beautify(`let seleku_components_${name} = ${convertToText(result_compile)}
-            ${includeLib()}
-            `, { indent_size: 2, space_in_empty_paren: true })
+            js: beautify(`let $_context__ = [];$_component__ = [];${ChildComponent} let seleku_components_${name} = ${convertToText(result_compile)}
+            let seleku_components_style_${name} = ${JSON.stringify(css)}
+            ${includeLib().replace(/\@css_cmpnts/igm, `seleku_components_style_${name}`)}
+
+            let __$_position__ = 0;
+            let __$_fromParentsComponents__ = [];
+
+            ${componentscript}
+
+            for(let $components_final of ${name}){
+
+              $components_final.create = ${componentConfig}
+              $components_final.$element = $components_final.component.parents;
+              $components_final.position = __$_position__;
+              if($components_final.$element.nodeName !== "CONFIG") __$_fromParentsComponents__.push($components_final);
+              if($components_final.$element.nodeName !== "CONFIG") $_context__.push($components_final.bindingContext = ${bindingVariabel});
+            
+              if($components_final.$element.nodeName !== "CONFIG") __$_position__++;
+            }
+
+            $_component__ = [...$_component__,...__$_fromParentsComponents__];
+            ${fs.readFileSync(__dirname + "/lib/context.js").toString().replace(/\@binding/igm, (bindingVariabel?.length > 0) ? bindingVariabel : "{}")}
+            `, { indent_size: 2, space_in_empty_paren: true }),
+            css: CSS_FROM_COMPONENTS.join(" ")
         };
+        // =============================================================
+        // ==================== compiler component =====================
+        // =============================================================
     }
 }
 require("fs").writeFileSync(__dirname + "/../src/result.js", new Compiler({ path: "/src/index.seleku", config: {
-        alias: __dirname + "/..",
+        alias: __dirname + "/../",
         name: "",
         type: "",
+        componentName: "card",
         lib: [
-            "all"
+            "all",
+            "plus.js"
         ]
     } }).compile().js);
 // console.log(data);
@@ -446,4 +555,12 @@ require("fs").writeFileSync(__dirname + "/../src/result.js", new Compiler({ path
 //   option: {},
 //   path: __dirname+'/../src/card.seleku',
 // });
-// GetImport.getSyntax;
+// console.log(new Compiler({path: "",config: {
+//     type: "component",
+//     content:GetImport.getSyntax,
+//     componentName: "card",
+//     lib: [
+//         "all",
+//     ],
+//     globalprop: false
+// }}).compile().js);

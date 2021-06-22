@@ -1,0 +1,1 @@
+let add = (...args)=> args[0]+args[1];

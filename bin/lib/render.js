@@ -122,9 +122,8 @@ class draw{
 			}
 
 			if($property === "element"){
-
 				// membuat element dari object components (1:8)
-				this.parent = document.createElement(this.components[$property]);
+			    this.parent = document.createElement(this.components[$property])
 
 			}
 
@@ -132,7 +131,7 @@ class draw{
 
 				// membuat inner dari object dan memasukan nya ke dalam element
 				// (1:9)
-				if(this.parent instanceof HTMLElement) this.parent.append(this.components[$property]);
+				if(this.parent instanceof HTMLElement) this.parent.append(this.components[$property].replace(/\"/igm,""));
 
 			}
 
@@ -190,7 +189,9 @@ class draw{
 		}
 
 		// merender element yang telah di buat ke dalam element target
-		this.target.appendChild(this.parent);
+		if(this.parent.nodeName !== "CONFIG"){
+            this.target.appendChild(this.parent)
+        }
 
 		this.parents = this.parent;
 

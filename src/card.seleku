@@ -1,1 +1,26 @@
-<h1>hello world</h1>
+<script type="text/javascript">
+	
+	export let count = 0;
+
+</script>
+
+<script type="text/javascript" seleku:ecosystem="true">
+	
+	return{
+		target,
+		onCreate(node){
+
+			console.log(" i am card component has been create");
+
+		},
+		onUpdate(){
+
+			console.log(" i am updated ");
+
+		}
+	}
+
+</script>
+
+<h1>hello {nama}</h1>
+<b>{count}</b>

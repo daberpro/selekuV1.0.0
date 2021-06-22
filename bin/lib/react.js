@@ -1,14 +1,8 @@
-// ini fungsi untuk me replace string berdasarkan index (optional)
-function replaceUsingIndex(data,from_,to,replaceMent){
-    if(from_ >= data.length) return data;
-
-    return data.substring(0,from_)+replaceMent+data.substring(to)
-}
 
 // fungsi reactivity adalah suatu fungsi yang di gunakan untuk
 // membuat agar suatu oject menjadi reactive (0:0)
 
-function Reactivity(obj_,components/*di dalam sini adalah components yang akan di binding*/){
+function Reactivity(obj_,components/*di dalam sini adalah components yang akan di binding*/,callback /*ini adalah call back function*/){
 
 	// lakukan validasi dan pengecekan bahwa parameter obj_
 	// itu adalah object (0:1)
@@ -34,7 +28,9 @@ function Reactivity(obj_,components/*di dalam sini adalah components yang akan d
 			},
 			set(args /*parameter ini akan berisi nilai yang di input*/){
 
-				console.log("haha")
+				// call back function akan di panggil setiap kali
+				// element di update
+				if(callback instanceof Function) callback();
 
 				// melakukan validasi/testing terhadap variabel yang
 				// terdefenisi
@@ -62,7 +58,26 @@ function Reactivity(obj_,components/*di dalam sini adalah components yang akan d
 								mirror = $components_.inner;
 							}
 
-							if( data === key.trim()){
+							if(/(\+|\-|\/|\*)/igm.test(data.trim())){
+
+								let operator = [...data.match(/(\+|\-|\/|\*)/igm)];
+								let string = [...data.match(/\w*/igm)];
+								string = string.filter((el)=> el.length > 0);
+
+								for(let $x in string){
+
+									if( string[$x] === key.trim()){
+
+										if(typeof args === "number") eval(`${string[$x]} = ${args}`);
+										if(typeof args === "string") eval(`${string[$x]} = "${args}"`);
+
+									}
+
+								}
+
+							}
+
+							if( !(/(\+|\-|\/|\*)/igm.test(data.trim())) && data === key.trim()){
 
 								if(typeof args === "number") eval(`${data} = ${args}`);
 								if(typeof args === "string") eval(`${data} = "${args}"`);
@@ -106,3 +121,51 @@ function Reactivity(obj_,components/*di dalam sini adalah components yang akan d
 
  }
 
+// custom Reactivity adalah suatu fungsi yang akan
+// mengubah suatu object menjadi recative (CUSTOMREACTIVITY)
+
+function CustomReactivity(obj,{before,after}){
+
+	for(let $property in obj){
+
+		if(obj.hasOwnProperty($property)){
+
+			let data = obj[$property];
+
+			Object.defineProperty(obj,$property,{
+				get(){
+
+					return data;
+
+				},
+				set(args){
+
+					if(before instanceof Function) before({key: $property,args});
+
+					try{
+
+						if(typeof args === "string") eval(`${$property} = "${args}"`);
+
+						if(typeof args === "number") eval(`${$property} = ${args}`);
+
+						if(args instanceof Object) eval(`${$property} = ${JSON.stringify(args)}`);
+
+
+					}catch(err){
+
+						console.log(err.message);
+
+					}
+
+					if(after instanceof Function) after({key: $property,args});
+
+				}
+			})
+
+		}
+
+	}
+
+	return obj;
+
+}

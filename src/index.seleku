@@ -1,27 +1,19 @@
 @import {
-	card as "card.seleku",
-	navbar as "navbar.seleku"
+	card as "src/card.seleku"
 }
 
-#define panjang 100px shhs
-#define panjang 
+#define panjang 100%
 
 <config global="true">
 	<title>
 		Hello world
 	</title>
-	<style type="text/css" seleku:ignore="true">
-		.box{
-			font-family: santuy;
-			width: panjang;
-		}
-	</style>
 <config>
 
 <h1 class="box" id="box1">
-	hello {nama}
+	hello {nama} 
 	<span>
-		tinggiku panjang
+		tinggiku 
 	</span>
 	<p>
 		haha
@@ -29,18 +21,48 @@
 	</p>
 </h1>
 
+<h1>hasil : {a+b}</h1>
+
+<script type="text/javascript" seleku:ecosystem="true">
+		
+	return {
+		target: document.body /*default from seleku*/,
+		onCreate(node){
+
+			// console.log(node);
+
+		}
+	}
+
+</script>
+
 <script type="text/javascript">
-	// @js
 
 	export let nama = "andi";
-	export let x = "andi";
+	export let x = 100;
+	export let a = 10;
+	export let b = 3;
 
 </script>
 
 <style type="text/css">
-	/* @css */
+
+	b{
+		color: gray;
+		width: ((args)=> then
+
+			return 100/3+"%"
+
+		end);
+	}
+
+	.box{
+		width:  100%;
+	}
 
 	h1{
-		color: red;
+		width: 100%;
 	}
+
+
 </style>
